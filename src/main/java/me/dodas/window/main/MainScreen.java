@@ -1,5 +1,7 @@
 package me.dodas.window.main;
 
+import me.dodas.util.FileManager;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
@@ -16,7 +18,7 @@ public class MainScreen {
     JPanel exportPanel;
 
     // Label
-    JLabel lblImgNull;
+    JLabel lblImg;
 
     // Text Field
     JTextField zipPathTextField;
@@ -38,7 +40,12 @@ public class MainScreen {
     File zipFileSelectedPath;
 
     //Booleans
-    Boolean imageFileIsValid;
+    Boolean imageFileIsValid = false;
+    Boolean zipFileIsValid = false;
+
+    //Strings
+    String zipFileAbsolutePath;
+    String imgFileAbsolutePath;
 
     public MainScreen(){
         JFrame jFrame = new JFrame();
@@ -64,14 +71,14 @@ public class MainScreen {
         //Image selection panel builder
 
         imgPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 95));
-        lblImgNull = new JLabel("Select Image.");
+        lblImg = new JLabel("Select Image.");
 
-        lblImgNull.setFont(new Font("Arial", Font.PLAIN, 12));
+        lblImg.setFont(new Font("Arial", Font.PLAIN, 12));
 
         imgPanel.setBounds(150, 10, 200,200);
         imgPanel.setBackground(new Color(197, 197, 197));
 
-        imgPanel.add(lblImgNull);
+        imgPanel.add(lblImg);
 
         return imgPanel;
     }
@@ -97,6 +104,7 @@ public class MainScreen {
         btnSelectZip.setText("Select");
         btnSelectZip.setBounds(290, 40, 100, 40);
         btnSelectZip.setPreferredSize(new Dimension(100, 40));
+        btnSelectZip.addActionListener(this::selectZip);
 
 
         zipSelectPanel.setBounds(45, 260, 400,100);
@@ -165,6 +173,104 @@ public class MainScreen {
         imageFileIsValid = imageFileChooser();
     }
 
+    private void selectZip(ActionEvent a){
+        zipFileAbsolutePath = zipPathTextField.getText().strip();
+
+        if (zipFileAbsolutePath == null || zipFileAbsolutePath == ""){
+
+            zipFileIsValid = zipFileChooser();
+            zipPathTextField.setText(zipFileAbsolutePath);
+
+        } else {
+
+            try {
+
+                zipFileSelectedPath = new File(zipFileAbsolutePath);
+                zipFileIsValid = FileManager.verifyZipFile(zipFileSelectedPath);
+
+                if (zipFileIsValid){
+
+                    zipSelectPanel.setBackground(new Color(76, 204, 87));
+
+                } else {
+
+                    JOptionPane.showMessageDialog(null, "The selected file is invalid. It is necessary to choose an zip file.", "Caution!", JOptionPane.WARNING_MESSAGE);
+                    zipSelectPanel.setBackground(new Color(204, 76, 76));
+                    zipFileAbsolutePath = "";
+                    zipPathTextField.setText("");
+
+                }
+
+            } catch (Exception e){
+
+                System.out.println(e);
+
+            }
+
+        }
+    }
+
+    private Boolean zipFileChooser(){
+        /**
+         * Select files and filter for zip files
+         * Returns true if a file is selected and it contains one of the extensions: [zip]
+         * If the operation is cancelled, or an invalid file is selected, the function will return false
+         */
+
+        List<String> zipFileExtensions = new ArrayList<>();
+        zipFileExtensions.add("zip");
+
+        try {
+
+            zipFileChooser = new JFileChooser();
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Zip File", "zip");
+            zipFileChooser.setFileFilter(filter);
+            zipFileChooser.setCurrentDirectory(new File("."));
+
+            Integer zipFileChooserResult = zipFileChooser.showOpenDialog(null);
+            System.out.println(zipFileChooserResult);
+
+            if (zipFileChooserResult == JFileChooser.APPROVE_OPTION){
+
+                zipFileSelectedPath = new File(zipFileChooser.getSelectedFile().getAbsolutePath());
+                System.out.println(zipFileSelectedPath);
+
+                if (FileManager.verifyZipFile(zipFileSelectedPath)){
+
+                    zipSelectPanel.setBackground(new Color(76, 204, 87));
+                    zipFileAbsolutePath = zipFileSelectedPath.getAbsolutePath();
+                    return true;
+
+                } else {
+
+                    JOptionPane.showMessageDialog(null, "The selected file is invalid. It is necessary to choose an zip file.", "Caution!", JOptionPane.WARNING_MESSAGE);
+                    zipSelectPanel.setBackground(new Color(204, 76, 76));
+                    zipFileAbsolutePath = zipFileSelectedPath.getAbsolutePath();
+
+                }
+
+            } else if (zipFileChooserResult == JFileChooser.CANCEL_OPTION){
+
+                if (zipFileSelectedPath == null) {
+
+                    zipSelectPanel.setBackground(new Color(204, 76, 76));
+                    return false;
+
+                }
+
+            }
+
+        }catch (Exception e){
+
+            System.out.println(e);
+            JOptionPane.showMessageDialog(null, "Error when trying to select file.", "Error!", JOptionPane.ERROR_MESSAGE);
+            return false;
+
+        }
+
+        return false;
+    }
+
     private Boolean imageFileChooser(){
         /**
          * Select files and filter for images
@@ -190,17 +296,18 @@ public class MainScreen {
             if (imgFileChooserResult == JFileChooser.APPROVE_OPTION){
 
                 imgFileSelectedPath = new File(imgFileChooser.getSelectedFile().getAbsolutePath());
+                imgFileAbsolutePath = imgFileSelectedPath.getAbsolutePath();
                 System.out.println(imgFileSelectedPath);
 
-                if (imgFilesExtensions.contains(getFileExtension(imgFileSelectedPath.getName()))){
+                if (FileManager.verifyImageFile(imgFileSelectedPath)){
 
-                    lblImgNull.setText("Nice!");
+                    lblImg.setText("Nice!");
                     imgPanel.setBackground(new Color(76, 204, 87));
 
                 } else {
 
                     JOptionPane.showMessageDialog(null, "The selected file is invalid. It is necessary to choose an image file.", "Caution!", JOptionPane.WARNING_MESSAGE);
-                    lblImgNull.setText("Invalid file.");
+                    lblImg.setText("Invalid file.");
                     imgPanel.setBackground(new Color(204, 76, 76));
 
                 }
@@ -209,7 +316,7 @@ public class MainScreen {
 
                 if (imgFileSelectedPath == null) {
 
-                    lblImgNull.setText("Invalid file.");
+                    lblImg.setText("Invalid file.");
                     imgPanel.setBackground(new Color(204, 76, 76));
 
                 }
@@ -225,16 +332,6 @@ public class MainScreen {
         }
 
         return false;
-    }
-
-    static String getFileExtension(String fileName){
-
-        if (fileName.contains(".")){
-            return fileName.substring(fileName.lastIndexOf(".") + 1);
-        } else {
-            return "";
-        }
-
     }
 
 }
