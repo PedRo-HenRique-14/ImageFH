@@ -3,10 +3,9 @@
 *.iml
 *.ipr
 *.iws
-.idea/
+/.idea/
 
 # maven
-target/
 dependency-reduced-pom.xml
 build.xml
-target/
+/target/
