@@ -7,6 +7,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,14 +39,17 @@ public class MainScreen {
     // Files
     File imgFileSelectedPath;
     File zipFileSelectedPath;
+    File exportFileSelectedPath;
 
     //Booleans
     Boolean imageFileIsValid = false;
     Boolean zipFileIsValid = false;
+    Boolean exportDestinationIsValid = false;
 
     //Strings
     String zipFileAbsolutePath;
     String imgFileAbsolutePath;
+    String exportAbsolutePath;
 
     public MainScreen(){
         JFrame jFrame = new JFrame();
@@ -140,11 +144,13 @@ public class MainScreen {
         btnSelectExportPath.setText("Choose");
         btnSelectExportPath.setBounds(180, 40, 100, 40);
         btnSelectExportPath.setPreferredSize(new Dimension(100, 40));
+        btnSelectExportPath.addActionListener(this::selectExportDestination);
 
         btnExport.setFont(new Font("Arial", Font.PLAIN, 12));
         btnExport.setText("Export");
         btnExport.setBounds(290, 40, 100, 40);
         btnExport.setPreferredSize(new Dimension(100, 40));
+        btnExport.addActionListener(this::exportImage);
 
         exportPanel.setBounds(45, 390, 400,100);
         exportPanel.setPreferredSize(new Dimension(400,100));
@@ -171,6 +177,12 @@ public class MainScreen {
 
     private void selectImage(ActionEvent a){
         imageFileIsValid = imageFileChooser();
+
+        if (imageFileIsValid){
+
+
+
+        }
     }
 
     private void selectZip(ActionEvent a){
@@ -208,6 +220,82 @@ public class MainScreen {
             }
 
         }
+    }
+
+    private void selectExportDestination(ActionEvent a){
+
+        exportDestinationIsValid = exportFileChooser();
+
+    }
+
+    private  void exportImage(ActionEvent a){
+        if (exportDestinationIsValid){
+
+            if (zipFileIsValid){
+
+                if (imageFileIsValid){
+
+                    if (FileManager.generateImageFH(exportAbsolutePath, imgFileAbsolutePath, zipFileAbsolutePath)){
+
+                        JOptionPane.showMessageDialog(null, "Your ImageFH are in export directory.", "Done!", JOptionPane.INFORMATION_MESSAGE);
+
+                    } else {
+
+                        JOptionPane.showMessageDialog(null, "An internal error occurred.", "Error!", JOptionPane.ERROR_MESSAGE);
+
+                    }
+
+                } else {
+
+                    JOptionPane.showMessageDialog(null, "The selected image file is not valid.", "Error!", JOptionPane.ERROR_MESSAGE);
+
+                }
+            } else {
+
+                JOptionPane.showMessageDialog(null, "The selected zip file is not valid.", "Error!", JOptionPane.ERROR_MESSAGE);
+
+            }
+        } else {
+
+            JOptionPane.showMessageDialog(null, "The export destination is not valid.", "Error!", JOptionPane.ERROR_MESSAGE);
+
+        }
+    }
+
+    private Boolean exportFileChooser(){
+
+        exportFileChooser = new JFileChooser();
+
+        exportFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        exportFileChooser.setCurrentDirectory(new File("."));
+
+        Integer exportFileChooserResult = exportFileChooser.showOpenDialog(null);
+        System.out.println(exportFileChooserResult);
+
+        if (exportFileChooserResult == JFileChooser.APPROVE_OPTION){
+
+            exportFileSelectedPath = exportFileChooser.getSelectedFile();
+            exportAbsolutePath = exportFileSelectedPath.getAbsolutePath();
+            exportPathTextField.setText(exportAbsolutePath);
+
+            return true;
+
+        } else if (exportFileChooserResult == JFileChooser.CANCEL_OPTION){
+
+            if (exportAbsolutePath == null){
+
+                return false;
+
+            } else {
+
+                exportPathTextField.setText(exportAbsolutePath);
+                return true;
+
+            }
+
+        }
+
+        return false;
     }
 
     private Boolean zipFileChooser(){
@@ -303,12 +391,14 @@ public class MainScreen {
 
                     lblImg.setText("Nice!");
                     imgPanel.setBackground(new Color(76, 204, 87));
+                    return true;
 
                 } else {
 
                     JOptionPane.showMessageDialog(null, "The selected file is invalid. It is necessary to choose an image file.", "Caution!", JOptionPane.WARNING_MESSAGE);
                     lblImg.setText("Invalid file.");
                     imgPanel.setBackground(new Color(204, 76, 76));
+                    return  false;
 
                 }
 
@@ -318,10 +408,13 @@ public class MainScreen {
 
                     lblImg.setText("Invalid file.");
                     imgPanel.setBackground(new Color(204, 76, 76));
+                    return false;
 
                 }
 
             }
+
+            return false;
 
         }catch (Exception e){
 
@@ -330,8 +423,6 @@ public class MainScreen {
             return false;
 
         }
-
-        return false;
     }
 
 }

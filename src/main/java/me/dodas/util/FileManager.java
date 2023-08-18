@@ -1,7 +1,5 @@
 package me.dodas.util;
 
-import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +46,23 @@ public class FileManager {
 
         } else {
 
+            return false;
+
+        }
+
+    }
+
+    public static Boolean generateImageFH(String exportPath, String imagePath, String zipPath){
+
+        try {
+
+            Runtime runtime = Runtime.getRuntime();
+            runtime.exec(String.format("cmd /c copy /b %s + %s imagefh_export.png", imagePath, zipPath), null, new File(exportPath));
+            return true;
+
+        } catch (Exception e){
+
+            System.out.println(e);
             return false;
 
         }
